@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>网络学堂 - 学生课程列表</title>
+<!--
+  **未渲染**状态的课程列表页：与真实站点首次返回的 HTML 一致 ——
+  DOM 里只有一段 mustache 模板（{{value.kcid}} 占位符）+ 一份给前端渲染器用的 JSON 数据。
+  用途：证明 extractCourses(DOM 路径) 在这种页面上必然抓 0 门课，
+        而 extractCoursesFromHtml(原始字符串路径) 兜底能拿到课程 id。
+-->
+<script type="text/html" id="tablist">
+<div class="dd" id="selfcourse">
+{{#list}}
+  <div class="item">
+    <input class="wlkcid" type="hidden" value="{{value.kcid}}">
+    <a class="title" href="/f/wlxt/course/index?wlkcid={{value.kcid}}&courseId={{value.courseid}}">{{value.name}}</a>
+    <p class="teacher">授课教师：<span class="teacherName">{{value.teacherName}}</span></p>
+    <ul class="state stu clearfix">
+      <li><a class="uuuhhh" href="/f/wlxt/kcgg/wlkc_ggb/student/beforePageListXs?wlkcid={{value.kcid}}&sfgk=0"><span class="name gonggao">公告</span><span class="num">{{value.ggundo}}</span></a></li>
+      <li><a class="uuuhhh" href="/f/wlxt/kj/wlkc_kjxxb/student/beforePageList?wlkcid={{value.kcid}}&sfgk=0"><span class="name kejian">课件</span><span class="num">{{value.kjundo}}</span></a></li>
+      <li><a class="uuuhhh" href="/f/wlxt/kczy/zy/student/beforePageList?wlkcid={{value.kcid}}"><span class="name zuoye">作业</span><span class="num">{{value.zyundo}}</span></a></li>
+    </ul>
+  </div>
+{{/list}}
+</div>
+</script>
+<script type="application/json" id="courseJson">
+{"message":"success","resultList":[
+  {"kcid":"2026-2027-1000000001","name":"数据结构","teacherName":"张三","kcurl":"/f/wlxt/course/index?wlkcid=2026-2027-1000000001&courseId=1000000001"},
+  {"kcid":"2026-2027-1000000102","name":"高等数学","teacherName":"李四","kcurl":"/f/wlxt/course/index?wlkcid=2026-2027-1000000102&courseId=1000000102"},
+  {"kcid":"2026-2027-1000000103","name":"大学物理实验","teacherName":"王五","kcurl":"/f/wlxt/course/index?wlkcid=2026-2027-1000000103&courseId=1000000103"},
+  {"kcid":"2026-2027-1000000104","name":"中国近现代史纲要","teacherName":"","kcurl":"/f/wlxt/course/index?wlkcid=2026-2027-1000000104&courseId=1000000104"}
+]}
+</script>
+</head>
+<body class="wlxt-course-list">
+  <div class="header">
+    <span class="user-name">张三</span>
+    <a href="/f/j_spring_security_logout">退出</a>
+  </div>
+  <h1>课程列表</h1>
+  <div class="dd" id="selfcourse"><!-- 由前端用上面的模板 + JSON 渲染，服务端返回的 HTML 里这里是空的 --></div>
+</body>
+</html>

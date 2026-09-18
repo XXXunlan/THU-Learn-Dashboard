@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>网络学堂 × 雨课堂</title>
+    <link rel="stylesheet" href="dashboard.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">THU</span>
+        <div class="brand-text">
+          <strong>网络学堂 × 雨课堂</strong>
+          <span id="brand-sub">课程 · 公告 · 文件 · 作业</span>
+        </div>
+      </div>
+
+      <div class="topbar-center">
+        <input id="search" class="search" type="search" placeholder="搜索课程 / 公告 / 文件 / 作业…" autocomplete="off" />
+      </div>
+
+      <div class="topbar-right">
+        <span id="status-chip" class="chip chip-idle">未连接</span>
+        <button id="btn-refresh" class="btn btn-primary" title="重新抓取全部课程">刷新</button>
+        <button id="btn-settings" class="btn btn-icon" title="设置">⚙</button>
+      </div>
+    </header>
+
+    <div id="progress-bar" class="progress hidden"><div class="progress-fill"></div><span class="progress-text"></span></div>
+
+    <div id="banner" class="banner hidden">
+      <div class="banner-text" id="banner-text"></div>
+      <div class="banner-actions" id="banner-actions"></div>
+    </div>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="sidebar-head">
+          <span>课程</span>
+          <span id="course-count" class="muted">0</span>
+        </div>
+        <nav id="course-list" class="course-list"></nav>
+        <div class="sidebar-foot">
+          <div id="last-updated" class="muted">尚未抓取</div>
+          <div class="sidebar-foot-actions">
+            <button id="btn-export" class="link debug-only">导出诊断</button>
+            <button id="btn-logout" class="link">退出登录</button>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <section class="course-hero" id="course-hero"></section>
+
+        <div class="tabs" id="tabs">
+          <button class="tab is-active" data-tab="homework">作业 <span class="count" id="tab-count-homework">0</span></button>
+          <button class="tab" data-tab="notice">公告 <span class="count" id="tab-count-notice">0</span></button>
+          <button class="tab" data-tab="file">文件 <span class="count" id="tab-count-file">0</span></button>
+          <button class="tab" data-tab="all">全部</button>
+          <div class="tabs-spacer"></div>
+          <div class="tabs-tools" id="tabs-tools"></div>
+        </div>
+
+        <section id="panel" class="panel"></section>
+      </main>
+    </div>
+
+    <div id="drawer" class="drawer hidden">
+      <div class="drawer-mask" data-close="1"></div>
+      <div class="drawer-body">
+        <div class="drawer-head">
+          <strong>设置</strong>
+          <button class="btn btn-icon" data-close="1">✕</button>
+        </div>
+        <div class="drawer-content">
+
+          <label class="field">
+            <span>学期（留空自动判断；形如 2026-2027-1）</span>
+            <input id="set-semester" type="text" placeholder="自动" />
+          </label>
+          <div class="muted" id="semester-hint"></div>
+
+          <label class="field">
+            <span>自动刷新间隔（分钟，0 关闭）</span>
+            <input id="set-autoRefresh" type="number" min="0" max="1440" step="5" />
+          </label>
+
+          <label class="switch">
+            <input id="set-showCompleted" type="checkbox" />
+            <span>显示已完成的作业（默认隐藏）</span>
+          </label>
+
+          <label class="switch">
+            <input id="set-enrichHomework" type="checkbox" />
+            <span>抓取作业说明与附件（多花几秒；这两样只在作业详情页上）</span>
+          </label>
+
+          <label class="switch">
+            <input id="set-yuketangHomework" type="checkbox" />
+            <span>刷新时同时抓雨课堂的作业，并归到网络学堂的同名课程里（需要先「授权雨课堂」）</span>
+          </label>
+
+          <label class="switch">
+            <input id="set-deepScan" type="checkbox" />
+            <span>逐条打开作业详情核对状态（更准，但慢很多）</span>
+          </label>
+
+          <label class="switch">
+            <input id="set-hideEmpty" type="checkbox" />
+            <span>隐藏没有内容的课程</span>
+          </label>
+
+          <label class="switch">
+            <input id="set-floating" type="checkbox" />
+            <span>在网络学堂页面显示悬浮入口</span>
+          </label>
+
+          <label class="switch">
+            <input id="set-tabFallback" type="checkbox" />
+            <span>接口拿不到数据时，用隐藏标签页让站点自己渲染后再读取（慢但更稳）</span>
+          </label>
+
+          <label class="switch">
+            <input id="set-autoLogin" type="checkbox" />
+            <span>允许打开登录页并自动填充账号密码</span>
+          </label>
+
+          <label class="field">
+            <span>每门课最多保留条目数</span>
+            <input id="set-maxItems" type="number" min="10" max="200" step="10" />
+          </label>
+
+          <label class="field">
+            <span>并发抓取课程数（1-8）</span>
+            <input id="set-concurrency" type="number" min="1" max="8" step="1" />
+          </label>
+
+          <div class="drawer-note" id="settings-note"></div>
+
+          <div class="drawer-section">
+            <strong>凭据</strong>
+            <p class="muted">密码仅用于登录网络学堂。默认只保存在本次浏览器会话（关闭浏览器即失效）；勾选“记住密码”才会以明文写入扩展本地存储。</p>
+            <button id="btn-forget" class="btn">清除已保存的账号密码</button>
+            <button id="btn-open-learn" class="btn">打开网络学堂课程列表页</button>
+          </div>
+
+          <div class="drawer-section">
+            <strong>雨课堂（另一个平台，作业已接入）</strong>
+            <p class="muted">
+              雨课堂是<b>独立账号体系</b>的前端应用。授予 <code>*.yuketang.cn</code> 权限后，
+              每次刷新都会顺带把雨课堂的作业抓下来，按<b>课程名</b>并到网络学堂的同名课程里
+              （带「雨课堂」标记，没有说明字段——它本来就没有）。
+              雨课堂那边需要你自己在浏览器里登录过。
+            </p>
+            <button id="btn-ykt-grant" class="btn btn-primary">授权雨课堂</button>
+            <div id="sniff-status" class="muted"></div>
+          </div>
+
+          <!-- ↓↓↓ 调试功能：默认隐藏，由下面「调试」里的开关控制 ↓↓↓ -->
+          <div class="debug-only hidden" id="debug-panel">
+            <div class="drawer-section">
+              <strong>诊断</strong>
+              <p class="muted">解析结果不对时，导出诊断包（含抓取统计、错误、日志与页面样本）可以快速定位是哪一步失配。</p>
+              <button id="btn-export2" class="btn">导出诊断包 JSON</button>
+              <button id="btn-ykt-check" class="btn">自检雨课堂</button>
+              <pre id="ykt-check-out" class="muted" style="display:none;white-space:pre-wrap;max-height:320px;overflow:auto;background:#f7f8fa;border:1px solid #e3e6ea;border-radius:6px;padding:8px;margin-top:8px;font-size:12px;line-height:1.5"></pre>
+            </div>
+
+            <div class="drawer-section">
+              <strong>全面取证（一次性收集）</strong>
+              <p class="muted">
+                逐个打开课程主页 / 公告 / 文件 / 作业页面，把<b>站点自己发出的请求与响应</b>、
+                页面结构骨架、各候选接口的原始返回全部打包成一个 JSON。
+                排查问题时跑一次这个，就不用反复来回试。约需 30～60 秒，期间请不要关闭浏览器。
+              </p>
+              <button id="btn-forensics" class="btn btn-primary">开始全面取证并下载</button>
+              <div id="forensics-status" class="muted"></div>
+            </div>
+
+            <div class="drawer-section">
+              <strong>雨课堂接口取证</strong>
+              <p class="muted">
+                只在排查问题时才需要：点「开始记录」后会打开雨课堂并记录站点自己发出的
+                所有请求（URL、方法、请求体、<b>响应体</b>），你在那边点开课程与作业，
+                回来点「结束记录并导出」，就能拿到一份完整接口清单。
+              </p>
+              <button id="btn-sniff-start" class="btn">开始记录雨课堂</button>
+              <button id="btn-sniff-stop" class="btn">结束记录并导出</button>
+            </div>
+          </div>
+
+          <div class="drawer-section">
+            <strong>调试</strong>
+            <p class="muted">
+              打开下面这个开关才会显示取证 / 自检 / 诊断导出等排障入口。
+              日常使用不需要它们，藏起来可以让界面干净一些。
+            </p>
+            <label class="switch">
+              <input id="set-debugMode" type="checkbox" />
+              <span>显示调试与取证功能</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="login-modal" class="modal hidden">
+      <div class="modal-mask"></div>
+      <div class="modal-body">
+        <h2>登录网络学堂</h2>
+        <p class="muted" id="login-hint">账号密码只发送给 learn.tsinghua.edu.cn，不会上传到任何第三方服务器。</p>
+
+        <label class="field">
+          <span>学号 / 账号</span>
+          <input id="login-user" type="text" autocomplete="username" placeholder="例如 2023012345" />
+        </label>
+        <label class="field">
+          <span>密码</span>
+          <input id="login-pass" type="password" autocomplete="current-password" />
+        </label>
+        <label class="switch">
+          <input id="login-remember" type="checkbox" />
+          <span>记住密码（明文保存在本机扩展存储中）</span>
+        </label>
+
+        <div id="login-error" class="login-error hidden"></div>
+        <pre id="login-diag" class="login-diag hidden"></pre>
+
+        <div class="modal-actions">
+          <button id="login-submit" class="btn btn-primary">保存并打开登录页</button>
+          <button id="login-manual" class="btn">我已在浏览器里登录</button>
+          <button id="login-diag-btn" class="btn">登录诊断</button>
+          <button id="login-cancel" class="btn btn-ghost">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <script type="module" src="dashboard.js"></script>
+  </body>
+</html>

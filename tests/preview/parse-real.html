@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>用真实 DOMParser 跑解析器</title>
+  </head>
+  <body>
+    <!--
+      为什么需要这个页面：项目里的 tests/minidom.mjs 是零依赖的迷你 DOM，
+      它扛不住真实页面（实测直接解析出空 body）。所以凡是「拿真实 HTML 验证解析器」
+      的场合，都要用**浏览器自己的 DOMParser** 跑，也就是这个页面。
+
+      用法：把真实页面存成 HTML 文件放到本目录，然后
+        msedge --headless=new --dump-dom file:///.../parse-real.html?fixture=xxx.html
+      结果会写进 #out。
+    -->
+    <pre id="out">running…</pre>
+    <script type="module">
+      import { parseHomeworkDetail } from '../../src/parsers/homework-detail.js';
+
+      const params = new URLSearchParams(location.search);
+      const fixture = params.get('fixture') || 'real-detail.html';
+      const url = params.get('url') || 'https://learn.tsinghua.edu.cn/f/wlxt/kczy/zy/student/viewZy?wlkcid=X&zyid=Y&xszyid=Z';
+      const out = document.getElementById('out');
+
+      function report(obj) {
+        out.textContent = JSON.stringify(obj, null, 2);
+      }
+
+      try {
+        const res = await fetch(fixture);
+        let html = await res.text();
+        // 兼容早期被 slimHtml 弄坏的快照（<script/> 在 HTML 里不是自闭合标签）
+        html = html.replace(/<script\/>/g, '').replace(/<style\/>/g, '');
+
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const parsed = parseHomeworkDetail(doc, url);
+        report({
+          ok: true,
+          bodyLength: (doc.body && doc.body.textContent || '').length,
+          elements: doc.querySelectorAll('*').length,
+          descriptionSource: parsed.descriptionSource,
+          descriptionLength: parsed.description.length,
+          description: parsed.description,
+          attachments: parsed.attachments,
+          title: parsed.title,
+        });
+      } catch (err) {
+        report({ ok: false, error: err.message, stack: String(err.stack || '').slice(0, 800) });
+      }
+    </script>
+  </body>
+</html>

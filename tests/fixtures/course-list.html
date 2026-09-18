@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>网络学堂 - 学生课程列表</title>
+<link rel="stylesheet" href="/css/wlxt.css">
+</head>
+<body class="wlxt-course-list">
+<!--
+  已渲染状态的课程列表页。
+  形状来自站点自己前端模板（<script type="text/html" id="tablist">）渲染后的 DOM：
+    div.dd#selfcourse > div.item  —— 一门课一张卡片
+      input.wlkcid[value]         —— 课程 id
+      a.title[href]               —— 课程名 + 课程主页地址
+      p.teacher > span.teacherName —— 教师（第 4 门课**故意没有**教师节点）
+      ul.state.stu.clearfix > li > a.uuuhhh —— 公告 / 课件 / 作业 / 讨论 / 答疑 / 问卷 入口
+  卡片里的上课时间/地点/简介也不是凑数：真实课程卡片就是带这些文字的。
+-->
+  <div class="header">
+    <span class="user-name">张三</span>
+    <a href="/f/j_spring_security_logout">退出</a>
+  </div>
+  <nav class="nav navbar">
+    <a href="/f/wlxt/index/course/student/">我的课程</a>
+    <a href="/f/wlxt/index/course/student/allcourse">全部课程</a>
+  </nav>
+
+  <h1>课程列表</h1>
+
+  <div class="dd" id="selfcourse">
+
+    <div class="item">
+      <input class="wlkcid" type="hidden" value="2026-2027-1000000001">
+      <a class="title" href="/f/wlxt/course/index?wlkcid=2026-2027-1000000001&courseId=1000000001">数据结构</a>
+      <p class="teacher">授课教师：<span class="teacherName">张三</span></p>
+      <p class="term">2026-2027 学年 秋季学期</p>
+      <p class="meta">上课时间：星期三 第 3-4 节&nbsp;|&nbsp;上课地点：第六教学楼 6A216</p>
+      <p class="intro">课程简介：讲授线性表、栈与队列、树与二叉树、图、查找与排序等基础内容，每周两次课，配套五次编程作业与一次期末项目，成绩由平时作业、上机实验与期末考试三部分构成；本课程不提供往年题解，请按时提交作业，逾期提交按天扣分。</p>
+      <ul class="state stu clearfix">
+        <li><a class="uuuhhh" href="/f/wlxt/kcgg/wlkc_ggb/student/beforePageListXs?wlkcid=2026-2027-1000000001&sfgk=0"><span class="name gonggao">公告</span><span class="num">3</span></a></li>
+        <li><a class="uuuhhh" href="/f/wlxt/kj/wlkc_kjxxb/student/beforePageList?wlkcid=2026-2027-1000000001&sfgk=0"><span class="name kejian">课件</span><span class="num">5</span></a></li>
+        <li><a class="uuuhhh" href="/f/wlxt/kczy/zy/student/beforePageList?wlkcid=2026-2027-1000000001"><span class="name zuoye">作业</span><span class="num">2</span></a></li>
+        <li><a class="uuuhhh" href="/f/wlxt/bbs/wlkc_bbs/student/beforePageList?wlkcid=2026-2027-1000000001"><span class="name taolun">讨论</span><span class="num">1</span></a></li>
+        <li><a class="uuuhhh" href="/f/wlxt/ks/wlkc_ksb/student/beforePageList?wlkcid=2026-2027-1000000001"><span class="name dayi">答疑</span><span class="num">0</span></a></li>
+        <li><a class="uuuhhh" href="/f/wlxt/wj/wlkc_wjb/student/beforePageList?wlkcid=2026-2027-1000000001"><span class="name wenjuan">问卷</span><span class="num">0</span></a></li>
+      </ul>
+    </div>
+
+    <div class="item">
+      <input class="wlkcid" type="hidden" value="2026-2027-1000000102">
+      <a class="title" href="/f/wlxt/course/index?wlkcid=2026-2027-1000000102&amp;courseId=1000000102">高等数学</a>
+      <p class="teacher">任课教师：<span class="teacherName">李四</span></p>
+      <p class="meta">上课时间：星期一 第 1-2 节&nbsp;|&nbsp;上课地点：第三教学楼 3104</p>
+      <p class="intro">课程简介：以极限与连续、一元微积分、多元微积分、级数与常微分方程为主线，强调计算能力与证明训练，每周一次习题课，每章布置习题并安排两次阶段测验；习题课由助教主持，阶段测验成绩计入平时分，缺考不予补测。</p>
+      <ul class="state stu clearfix">
+        <li><a class="uuuhhh" href="/f/wlxt/kcgg/wlkc_ggb/student/beforePageListXs?wlkcid=2026-2027-1000000102&sfgk=0"><span class="name gonggao">公告</span><span class="num">1</span></a></li>
+        <li><a class="uuuhhh" href="/f/wlxt/kj/wlkc_kjxxb/student/beforePageList?wlkcid=2026-2027-1000000102&sfgk=0"><span class="name kejian">课件</span><span class="num">9</span></a></li>
+        <li><a class="uuuhhh" href="/f/wlxt/kczy/zy/student/beforePageList?wlkcid=2026-2027-1000000102"><span class="name zuoye">作业</span><span class="num">4</span></a></li>
+      </ul>
+    </div>
+
+    <div class="item">
+      <input class="wlkcid" type="hidden" value="2026-2027-1000000103">
+      <a class="title" href="/f/wlxt/course/index?wlkcid=2026-2027-1000000103&courseId=1000000103">大学物理实验</a>
+      <p class="teacher">主讲：<span class="teacherName">王五</span></p>
+      <p class="meta">上课时间：星期四 第 5-8 节&nbsp;|&nbsp;上课地点：物理系实验楼 B203</p>
+      <p class="intro">课程简介：共八个实验单元，涵盖力学、热学、电磁学与光学，每个单元要求课前预习、课上完成数据采集、课后一周内提交实验报告，报告以原始数据与误差分析为主；实验报告需附原始数据与误差分析，未完成预习报告不得进入实验室。</p>
+      <ul class="state stu clearfix">
+        <li><a class="uuuhhh" href="/f/wlxt/kcgg/wlkc_ggb/student/beforePageListXs?wlkcid=2026-2027-1000000103&sfgk=0"><span class="name gonggao">公告</span><span class="num">2</span></a></li>
+        <li><a class="uuuhhh" href="/f/wlxt/kj/wlkc_kjxxb/student/beforePageList?wlkcid=2026-2027-1000000103&sfgk=0"><span class="name kejian">课件</span><span class="num">6</span></a></li>
+        <li><a class="uuuhhh" href="/f/wlxt/kczy/zy/student/beforePageList?wlkcid=2026-2027-1000000103"><span class="name zuoye">作业</span><span class="num">8</span></a></li>
+      </ul>
+    </div>
+
+    <!-- 这门课故意没有教师节点：解析器必须在缺字段时仍然产出课程 -->
+    <div class="item">
+      <input class="wlkcid" type="hidden" value="2026-2027-1000000104">
+      <a class="title" href="/f/wlxt/course/index?wlkcid=2026-2027-1000000104&courseId=1000000104">中国近现代史纲要</a>
+      <p class="meta">上课时间：星期五 第 5-6 节&nbsp;|&nbsp;上课地点：第二教学楼 2201</p>
+      <p class="intro">课程简介：以 1840 年以来的重大历史事件与社会变迁为主线，配合课上讨论与史料选读，考核方式为一次期中读书报告与一次期末随堂论文，不设闭卷考试；课上讨论与读书报告各占一半权重，史料选读材料随课件发布，请提前阅读。</p>
+      <ul class="state stu clearfix">
+        <li><a class="uuuhhh" href="/f/wlxt/kcgg/wlkc_ggb/student/beforePageListXs?wlkcid=2026-2027-1000000104&sfgk=0"><span class="name gonggao">公告</span><span class="num">0</span></a></li>
+        <li><a class="uuuhhh" href="/f/wlxt/kj/wlkc_kjxxb/student/beforePageList?wlkcid=2026-2027-1000000104&sfgk=0"><span class="name kejian">课件</span><span class="num">1</span></a></li>
+        <li><a class="uuuhhh" href="/f/wlxt/kczy/zy/student/beforePageList?wlkcid=2026-2027-1000000104"><span class="name zuoye">作业</span><span class="num">0</span></a></li>
+      </ul>
+    </div>
+
+  </div>
+</body>
+</html>

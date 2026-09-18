@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>诊断：作业说明到底是从哪段取的</title>
+  </head>
+  <body>
+    <pre id="out">running…</pre>
+    <script type="module">
+      import { parseHomeworkDetail } from '../../src/parsers/homework-detail.js';
+
+      const params = new URLSearchParams(location.search);
+      const fixture = params.get('fixture') || 'real-detail.html';
+      const url = 'https://learn.tsinghua.edu.cn/f/wlxt/kczy/zy/student/viewZy?wlkcid=X&zyid=Y&xszyid=Z';
+      const out = document.getElementById('out');
+      const lines = [];
+      const say = (s) => lines.push(s);
+
+      try {
+        let html = await (await fetch(fixture)).text();
+        html = html.replace(/<script\/>/g, '').replace(/<style\/>/g, '');
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+
+        // 1) 页面上哪些元素“像”说明标签
+        const all = Array.from(doc.querySelectorAll('td,th,dt,dd,label,span,div,p,strong,b,h1,h2,h3,h4,h5,li'));
+        say('=== 候选标签元素 ===');
+        for (const kw of ['作业说明', '作业内容', '作业要求', '说明']) {
+          const exact = all.filter((el) => (el.textContent || '').replace(/\s+/g, ' ').trim() === kw);
+          const loose = all.filter((el) => (el.textContent || '').replace(/\s+/g, ' ').trim().startsWith(kw));
+          say(`[${kw}] 精确匹配 ${exact.length} 个；以它开头 ${loose.length} 个`);
+          for (const el of loose.slice(0, 4)) {
+            const t = (el.textContent || '').replace(/\s+/g, ' ').trim();
+            say(`    <${el.tagName.toLowerCase()} class="${el.getAttribute('class') || ''}"> len=${t.length} :: ${t.slice(0, 70)}`);
+          }
+        }
+
+        // 2) 解析结果
+        const r = parseHomeworkDetail(doc, url);
+        say('');
+        say(`=== 解析结果 ===`);
+        say(`descriptionSource = ${r.descriptionSource}`);
+        say(`description.length = ${r.description.length}`);
+        say('--- description ---');
+        say(r.description.slice(0, 700));
+        say('--- attachments ---');
+        for (const a of r.attachments) say(`  ${a.name} (${a.ext})`);
+
+        out.textContent = lines.join('\n');
+      } catch (err) {
+        out.textContent = `ERROR: ${err.message}\n${String(err.stack || '').slice(0, 600)}`;
+      }
+    </script>
+  </body>
+</html>

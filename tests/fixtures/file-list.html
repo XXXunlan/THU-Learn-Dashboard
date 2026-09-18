@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>课件 - 数据结构</title>
+</head>
+<body class="wlxt-file-list">
+<!--
+  课件/文件列表页：<table id="kjalltable">。
+  “操作”列是站点自己的下载接口，用图标链接（真实页面就是这样的图标按钮，
+  heuristics.primaryAnchor 里那处 `a.querySelector('img') && !t` 的扣分就是为它准备的）。
+  解析器要能从这一行里同时拿到：标题（而不是下载图标）、上传时间、大小。
+-->
+  <h1 class="course-name">数据结构</h1>
+  <div class="toolbar-tip">课件与文件（点击图标下载）</div>
+
+  <table id="kjalltable" class="table table-striped table-bordered">
+    <thead>
+      <tr><th>名称</th><th>类型</th><th>大小</th><th>上传时间</th><th>操作</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a href="/f/wlxt/kj/wlkc_kjxxb/student/beforeViewXs?wlkcid=2026-2027-1000000001&wjid=501">第1章 绪论.pdf</a></td>
+        <td>PDF</td>
+        <td>2 MB</td>
+        <td>2026-09-02 09:00</td>
+        <td><a class="btn-icon" href="/b/wlxt/kj/wlkc_kjxxb/student/downloadFile?sfgk=0&wjid=501" title="下载"><img src="/img/icon-download.png" alt="下载"></a></td>
+      </tr>
+      <tr>
+        <td><a href="/f/wlxt/kj/wlkc_kjxxb/student/beforeViewXs?wlkcid=2026-2027-1000000001&wjid=502">第2章 线性表.pdf</a></td>
+        <td>PDF</td>
+        <td>3 MB</td>
+        <td>2026-09-09 15:10</td>
+        <td><a class="btn-icon" href="/b/wlxt/kj/wlkc_kjxxb/student/downloadFile?sfgk=0&wjid=502" title="下载"><img src="/img/icon-download.png" alt="下载"></a></td>
+      </tr>
+      <tr>
+        <td><a href="/f/wlxt/kj/wlkc_kjxxb/student/beforeViewXs?wlkcid=2026-2027-1000000001&wjid=503">实验指导书.docx</a></td>
+        <td>DOCX</td>
+        <td>895 KB</td>
+        <td>2026-09-15 11:30</td>
+        <td><a class="btn-icon" href="/b/wlxt/kj/wlkc_kjxxb/student/downloadFile?sfgk=0&wjid=503" title="下载"><img src="/img/icon-download.png" alt="下载"></a></td>
+      </tr>
+      <tr>
+        <td><a href="/f/wlxt/kj/wlkc_kjxxb/student/beforeViewXs?wlkcid=2026-2027-1000000001&wjid=504">课程幻灯片.zip</a></td>
+        <td>ZIP</td>
+        <td>4 MB</td>
+        <td>2026-09-20 20:05</td>
+        <td><a class="btn-icon" href="/b/wlxt/kj/wlkc_kjxxb/student/downloadFile?sfgk=0&wjid=504" title="下载"><img src="/img/icon-download.png" alt="下载"></a></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pagination">
+    <span class="prev disabled">上一页</span>
+    <span class="current">1</span>
+    <span class="next disabled">下一页</span>
+  </div>
+</body>
+</html>

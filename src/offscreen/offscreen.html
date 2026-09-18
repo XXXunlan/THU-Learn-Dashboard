@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>THU Learn · parser</title>
+  </head>
+  <body>
+    <!--
+      离屏文档：MV3 的 Service Worker 里没有 DOMParser，
+      所以所有 HTML 解析都在这个隐藏页面里做，SW 通过消息把 HTML 丢进来。
+    -->
+    <script type="module" src="offscreen.js"></script>
+  </body>
+</html>

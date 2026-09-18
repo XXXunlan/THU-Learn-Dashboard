@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>网络学堂 - 用户登录</title>
+</head>
+<body class="wlxt-login">
+<!--
+  网络学堂自己的本地登录表单（2018 版）：POST 到 /b/j_spring_security_check，
+  Spring Security 的参数名 j_username / j_password，带一个隐藏的 _csrf。
+  解析器的契约：action / method / usernameField / passwordField / submitField 全部现场识别，不写死接口。
+-->
+  <div class="login-box">
+    <h1>用户登录</h1>
+    <form action="/b/j_spring_security_check" method="post" id="loginForm">
+      <input type="hidden" name="_csrf" value="3f1a9c0d-7b2e-4a5f-9c31-0d8f5e77aa10">
+      <p class="form-row">
+        <label for="j_username">用户名</label>
+        <input type="text" id="j_username" name="j_username" placeholder="学号或用户名" autocomplete="username">
+      </p>
+      <p class="form-row">
+        <label for="j_password">密码</label>
+        <input type="password" id="j_password" name="j_password" autocomplete="current-password">
+      </p>
+      <p class="form-row">
+        <input type="submit" name="submit" value="登录">
+      </p>
+    </form>
+    <p class="sso-tip">
+      <a href="https://id.tsinghua.edu.cn/do/off/ui/auth/login/for/learn">统一身份认证登录</a>
+    </p>
+  </div>
+</body>
+</html>

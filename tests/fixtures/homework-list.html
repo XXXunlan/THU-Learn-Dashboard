@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>作业 - 数据结构</title>
+</head>
+<body class="wlxt-homework-list">
+<!--
+  作业列表页，刻意做成“三种形态混在一页”的样子，覆盖 heuristics 的多策略引擎：
+    1) 标准 <table id="zyalltable"> 行 —— 正常字段顺序；
+    2) 第 3 行把字段顺序打乱（成绩/状态跑到前面）；
+    3) 第 4 行把“提交日期”放在了“截止日期”该在的位置（用来暴露 extractDeadline 的兜底规则）；
+    4) 下半页是 <div class="hw-card"> 兄弟节点卡片 —— 只有 findRepeatedGroups 兜底能抓到。
+  作业详情链接按站点自己的规则写：未交 -> viewZy、已交待批阅 -> viewTj、已批改 -> viewCj。
+-->
+  <h1 class="course-name">数据结构</h1>
+  <div class="toolbar-tip">作业列表</div>
+
+  <table id="zyalltable" class="table table-striped table-bordered">
+    <thead>
+      <tr>
+        <th>作业题目</th><th>完成方式</th><th>状态</th><th>截止日期</th><th>截止倒计时</th>
+        <th>提交日期</th><th>批阅教师</th><th>批阅日期</th><th>成绩</th><th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a href="/f/wlxt/kczy/zy/student/viewZy?wlkcid=2026-2027-1000000001&sfgq=0&zyid=1&xszyid=2">第一次作业</a></td>
+        <td>个人</td>
+        <td>未提交</td>
+        <td>2026-09-20 23:59</td>
+        <td>已逾期 15 天</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td><a href="/f/wlxt/kczy/zy/student/viewZy?wlkcid=2026-2027-1000000001&sfgq=0&zyid=1&xszyid=2">查看</a></td>
+      </tr>
+      <tr>
+        <td><a href="/f/wlxt/kczy/zy/student/viewTj?wlkcid=2026-2027-1000000001&sfgq=0&zyid=3&xszyid=4">第二次作业</a></td>
+        <td>个人</td>
+        <td>已提交</td>
+        <td>2026-10-05 23:59</td>
+        <td>剩 0 天</td>
+        <td>2026-10-01 15:20</td>
+        <td>李四</td>
+        <td></td>
+        <td></td>
+        <td><a href="/f/wlxt/kczy/zy/student/viewTj?wlkcid=2026-2027-1000000001&sfgq=0&zyid=3&xszyid=4">查看</a></td>
+      </tr>
+      <tr>
+        <!-- 字段顺序被打乱：成绩 / 状态 提前 -->
+        <td><a href="/f/wlxt/kczy/zy/student/viewCj?wlkcid=2026-2027-1000000001&zyid=9&xszyid=10">第三次作业（实验报告）</a></td>
+        <td>95</td>
+        <td>小组</td>
+        <td>已批改</td>
+        <td>2026-09-25 23:59</td>
+        <td>已过期</td>
+        <td>2026-09-18 08:00</td>
+        <td>王五</td>
+        <td>2026-09-26 10:00</td>
+        <td><a href="/f/wlxt/kczy/zy/student/viewCj?wlkcid=2026-2027-1000000001&zyid=9&xszyid=10">查看</a></td>
+      </tr>
+      <tr>
+        <!-- 行内没有「截止」二字（关键词只在表头里），因此只能靠列位置判断哪个日期是截止时间 -->
+        <td><a href="/f/wlxt/kczy/zy/student/viewTj?wlkcid=2026-2027-1000000001&sfgq=0&zyid=11&xszyid=12">第四次作业</a></td>
+        <td>个人</td>
+        <td>已提交</td>
+        <td>2026-10-08 23:59</td>
+        <td>剩 3 天</td>
+        <td>2026-09-30 09:10</td>
+        <td>王五</td>
+        <td>2026-10-09 14:00</td>
+        <td>88</td>
+        <td><a href="/f/wlxt/kczy/zy/student/viewTj?wlkcid=2026-2027-1000000001&sfgq=0&zyid=11&xszyid=12">查看</a></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2 class="section-title">补交作业（卡片式布局）</h2>
+  <div class="hw-cards">
+    <div class="hw-card">
+      <h3 class="hw-title"><a href="/f/wlxt/kczy/zy/student/viewTj?wlkcid=2026-2027-1000000001&sfgq=0&zyid=5&xszyid=6">第五次作业（小组）</a></h3>
+      <p class="hw-meta">完成方式：小组 · 截止日期：2026-11-01 23:59 · 提交日期：2026-10-28 20:00</p>
+      <p class="hw-state">已提交 · 待批阅</p>
+    </div>
+    <div class="hw-card">
+      <h3 class="hw-title"><a href="/f/wlxt/kczy/zy/student/viewZy?wlkcid=2026-2027-1000000001&sfgq=0&zyid=7&xszyid=8">第六次作业</a></h3>
+      <p class="hw-meta">完成方式：个人 · 截止日期：2026-11-15 23:59</p>
+      <p class="hw-state">未提交</p>
+    </div>
+  </div>
+</body>
+</html>

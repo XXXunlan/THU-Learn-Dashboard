@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>面板预览（mock 数据）</title>
+    <link rel="stylesheet" href="../../src/dashboard/dashboard.css">
+    <script src="mock-chrome.js"></script>
+  </head>
+  <body><div id="mock-status" style="margin: 0px; padding: 6px 12px; background: rgb(234, 246, 236); color: rgb(46, 125, 50); font: 12px sans-serif;">mock: ok | desc: scrollH=86 clientH=47 rectH=47 w=527 display=flow-root whiteSpace=pre-line clamp=2 | 文本前30字: 示例作业说明：请从本窗口下载示例作业模板，并按要求完成以下任 | desc-pop 可见，长度 79 | 附件标记: 📎 附件 | 雨课堂标记: 雨课堂 | 雨课堂状态: 未完成 0/6 | 雨课堂说明行: 章节：示例教材（上） | 已完成的雨课堂作业已隐藏 | 调试功能默认隐藏 ✓ | 打开开关后调试面板出现 ✓</div>
+    <p style="margin:0;padding:6px 12px;background:#fff5e5;color:#6b4300;font:12px sans-serif">
+      预览页：使用 mock 数据渲染真实面板（不是扩展运行环境）
+    </p>
+
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">THU</span>
+        <div class="brand-text">
+          <strong>网络学堂面板</strong>
+          <span id="brand-sub">课程 · 公告 · 文件 · 作业</span>
+        </div>
+      </div>
+      <div class="topbar-center">
+        <input id="search" class="search" type="search" placeholder="搜索课程 / 公告 / 文件 / 作业…" autocomplete="off">
+      </div>
+      <div class="topbar-right">
+        <span id="status-chip" class="chip chip-ok">已连接</span>
+        <button id="btn-refresh" class="btn btn-primary" title="重新抓取全部课程">刷新</button>
+        <button id="btn-settings" class="btn btn-icon" title="设置">⚙</button>
+      </div>
+    </header>
+
+    <div id="progress-bar" class="progress hidden"><div class="progress-fill"></div><span class="progress-text"></span></div>
+    <div id="banner" class="banner banner-warn">
+      <div class="banner-text" id="banner-text">部分内容可能不完整：1 门课程有部分板块抓取失败</div>
+      <div class="banner-actions" id="banner-actions"><button class="btn btn-primary">重试</button><button class="btn">导出诊断</button></div>
+    </div>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="sidebar-head"><span>课程</span><span id="course-count" class="muted">3</span></div>
+        <nav id="course-list" class="course-list"><button class="course-item is-active" data-course="__all__">
+      <span class="name">全部课程<span class="sub">作业 6 · 公告 3 · 文件 3</span></span>
+      <span class="pill pill-danger">6</span>
+    </button><button class="course-item " data-course="2026-2027-1000000001" title="数据结构">
+        <span class="name">数据结构<span class="sub">张三 · 2026-2027秋季学期</span></span>
+        <span class="pill pill-danger">4</span>
+      </button><button class="course-item " data-course="2026-2027-1000000002" title="示例课程E">
+        <span class="name">示例课程E<span class="sub">王五 · 2026-2027秋季学期</span></span>
+        <span class="pill pill-danger">1</span>
+      </button><button class="course-item " data-course="2026-2027-1000000003" title="高等数学（3）">
+        <span class="name">高等数学（3）<span class="sub">公告 0 · 文件 1</span></span>
+        <span class="pill pill-danger">1</span>
+      </button></nav>
+        <div class="sidebar-foot">
+          <div id="last-updated" class="muted">上次更新 2026-09-18 15:39（8.4s） · 说明 2/6</div>
+          <div class="sidebar-foot-actions">
+            <button id="btn-export" class="link">导出诊断</button>
+            <button id="btn-logout" class="link">退出登录</button>
+          </div>
+        </div>
+      </aside>
+      <main class="main">
+        <section class="course-hero" id="course-hero">
+      <div class="hero-title"><h1>全部课程总览</h1>
+        <span class="tag-kind">3 门课程</span>
+      </div>
+      <div class="hero-meta">
+        <span>公告 3</span>
+        <span>文件 3</span>
+        <span>作业 7</span>
+        <span>抓取于 2026-09-18 15:39</span>
+      </div>
+      <div class="hero-stats">
+        <div class="stat stat-danger"><b>6</b><span>待交作业</span></div>
+        <div class="stat"><b>3</b><span>7 天内截止</span></div>
+        <div class="stat"><b>3</b><span>公告</span></div>
+        <div class="stat"><b>3</b><span>文件</span></div>
+      </div>
+      <div class="hero-actions">
+        <button class="btn" data-act="open-learn">打开网络学堂课程列表</button>
+        <button class="btn" data-act="refresh">重新抓取</button>
+      </div></section>
+        <div class="tabs" id="tabs">
+          <button class="tab" data-tab="homework">作业 <span class="count" id="tab-count-homework">6</span></button>
+          <button class="tab" data-tab="notice">公告 <span class="count" id="tab-count-notice">3</span></button>
+          <button class="tab" data-tab="file">文件 <span class="count" id="tab-count-file">3</span></button>
+          <button class="tab is-active" data-tab="all">全部</button>
+          <div class="tabs-spacer"></div>
+          <div class="tabs-tools" id="tabs-tools"></div>
+        </div>
+        <section id="panel" class="panel"><div class="section-block"><div class="section-heading">待交作业 · 6</div><div class="card-grid"><article class="card urgency-overdue" data-url="https://learn.tsinghua.edu.cn/f/wlxt/kczy/zy/student/viewZy?wlkcid=A&amp;sfgq=1&amp;zyid=1&amp;xszyid=11">
+    <div class="card-main">
+      <h3 class="card-title">第一次作业：线性表与链表<span class="tag-attach" title="作业附件（1）：习题模板.docx">📎 附件</span></h3>
+      <div class="card-meta">
+        <span class="tag-course">数据结构</span>
+        <span class="status status-pending">未提交</span>
+        
+        
+      </div>
+      <p class="card-desc" data-full="示例作业说明：请从本窗口下载示例作业模板，并按要求完成以下任务。
+填写示例问卷；
+阅读一份示例材料并写出简要说明；
+就一个示例话题提出一个你想研究的具体问题。">示例作业说明：请从本窗口下载示例作业模板，并按要求完成以下任务。
+填写示例问卷；
+阅读一份示例材料并写出简要说明；
+就一个示例话题提出一个你想研究的具体问题。</p>
+    </div>
+    <div class="card-right"><div class="deadline">2026-09-18 09:43</div>
+       <div class="countdown">已逾期 6 小时</div>
+       <div class="muted">今天</div>
+      
+    </div>
+  </article><article class="card urgency-critical" data-url="https://learn.tsinghua.edu.cn/f/wlxt/kczy/zy/student/viewZy?wlkcid=A&amp;sfgq=0&amp;zyid=2&amp;xszyid=12">
+    <div class="card-main">
+      <h3 class="card-title">实验二：二叉树遍历实现<span class="tag-attach" title="作业附件（2）：实验二_源码框架.zip、实验报告模板.pdf">📎 2附件</span></h3>
+      <div class="card-meta">
+        <span class="tag-course">数据结构</span>
+        <span class="status status-pending">未提交</span>
+        
+        
+      </div>
+      <p class="card-desc" data-full="实现前序、中序、后序三种遍历，并提交源码与实验报告。">实现前序、中序、后序三种遍历，并提交源码与实验报告。</p>
+    </div>
+    <div class="card-right"><div class="deadline">2026-09-18 20:43</div>
+       <div class="countdown">剩 4 小时 59 分</div>
+       <div class="muted">今天</div>
+      
+    </div>
+  </article><article class="card urgency-soon" data-url="https://learn.tsinghua.edu.cn/f/wlxt/kczy/zy/student/viewZy?wlkcid=A&amp;sfgq=0&amp;zyid=3&amp;xszyid=13" title="https://learn.tsinghua.edu.cn/f/wlxt/kczy/zy/student/viewZy?wlkcid=A&amp;sfgq=0&amp;zyid=3&amp;xszyid=13">
+    <div class="card-main">
+      <h3 class="card-title">作业1 HW#1（站点上本来就没写说明）<span class="tag-attach" title="作业附件（1）：作业1.pdf">📎 附件</span></h3>
+      <div class="card-meta">
+        <span class="tag-course">数据结构</span>
+        <span class="status status-pending">未提交</span>
+        
+        
+      </div>
+      <p class="card-desc card-desc-empty">该作业未填写说明</p>
+    </div>
+    <div class="card-right"><div class="deadline">2026-09-21 15:43</div>
+       <div class="countdown">剩 2 天 23 小时</div>
+       <div class="muted">3 天后</div>
+      <div class="muted" title="行内没有「截止」字样，按最晚的日期推定">推定</div>
+    </div>
+  </article><article class="card urgency-far" data-url="https://learn.tsinghua.edu.cn/f/wlxt/kczy/zy/student/viewZy?wlkcid=B&amp;zyid=5&amp;xszyid=15" title="https://learn.tsinghua.edu.cn/f/wlxt/kczy/zy/student/viewZy?wlkcid=B&amp;zyid=5&amp;xszyid=15">
+    <div class="card-main">
+      <h3 class="card-title">期末论文提纲</h3>
+      <div class="card-meta">
+        <span class="tag-course">示例课程E</span>
+        <span class="status status-pending">未提交</span>
+        
+        
+      </div>
+      
+    </div>
+    <div class="card-right"><div class="deadline">2026-09-28 15:43</div>
+       <div class="countdown">剩 9 天 23 小时</div>
+       <div class="muted"></div>
+      
+    </div>
+  </article><article class="card urgency-far" data-url="https://pro.yuketang.cn/ai-workspace/lms-graph/3000001/exercise/5000002?is_chapter=1&amp;node_id=6000001" title="https://pro.yuketang.cn/ai-workspace/lms-graph/3000001/exercise/5000002?is_chapter=1&amp;node_id=6000001">
+    <div class="card-main">
+      <h3 class="card-title">第一周作业<span class="tag-platform" title="这条来自雨课堂（另一个平台与账号体系），点开会在雨课堂里打开">雨课堂</span></h3>
+      <div class="card-meta">
+        <span class="tag-course">数据结构</span>
+        <span class="status status-pending">未完成 0/6</span>
+        
+        
+      </div>
+      <p class="card-desc card-desc-empty" title="雨课堂作业没有「作业说明」这种字段，这里显示它所在的章节">章节：示例教材（上）</p>
+    </div>
+    <div class="card-right"><div class="deadline">2026-09-30 15:43</div>
+       <div class="countdown">剩 11 天 23 小时</div>
+       <div class="muted"></div>
+      
+    </div>
+  </article><article class="card " data-url="https://learn.tsinghua.edu.cn/f/wlxt/kczy/zy/student/viewZy?wlkcid=C&amp;zyid=6&amp;xszyid=16" title="https://learn.tsinghua.edu.cn/f/wlxt/kczy/zy/student/viewZy?wlkcid=C&amp;zyid=6&amp;xszyid=16">
+    <div class="card-main">
+      <h3 class="card-title">习题册第 5 章（未标注截止）</h3>
+      <div class="card-meta">
+        <span class="tag-course">高等数学（3）</span>
+        <span class="status status-pending">未提交</span>
+        
+        
+      </div>
+      
+    </div>
+    <div class="card-right"><div class="muted">未标注截止时间</div>
+      
+    </div>
+  </article></div></div><div class="section-block"><div class="section-heading">公告 · 3</div><div class="card-grid"><article class="card" data-url="https://learn.tsinghua.edu.cn/f/wlxt/kcgg/wlkc_ggb/student/beforeViewXs?wlkcid=A&amp;id=11" title="https://learn.tsinghua.edu.cn/f/wlxt/kcgg/wlkc_ggb/student/beforeViewXs?wlkcid=A&amp;id=11">
+    <div class="card-main">
+      <h3 class="card-title">关于期中考试安排的通知</h3>
+      <div class="card-meta">
+        <span class="tag-course">数据结构</span>
+        <span class="tag-kind notice">公告</span>
+        
+        <span>2026-09-18</span>
+        <span>李四</span>
+        
+        <span class="tag-new">未读</span>
+      </div>
+      <p class="card-excerpt">期中考试定于第 8 周周六上午，请同学们注意考试地点与座位号安排。</p>
+    </div>
+  </article><article class="card" data-url="https://learn.tsinghua.edu.cn/f/wlxt/kcgg/wlkc_ggb/student/beforeViewXs?wlkcid=B&amp;id=21" title="https://learn.tsinghua.edu.cn/f/wlxt/kcgg/wlkc_ggb/student/beforeViewXs?wlkcid=B&amp;id=21">
+    <div class="card-main">
+      <h3 class="card-title">本周课堂安排调整</h3>
+      <div class="card-meta">
+        <span class="tag-course">示例课程E</span>
+        <span class="tag-kind notice">公告</span>
+        
+        <span>2026-09-13</span>
+        <span>王五</span>
+        
+        
+      </div>
+      <p class="card-excerpt">本周改为线上进行。</p>
+    </div>
+  </article><article class="card" data-url="https://learn.tsinghua.edu.cn/f/wlxt/kcgg/wlkc_ggb/student/beforeViewXs?wlkcid=B&amp;id=22" title="https://learn.tsinghua.edu.cn/f/wlxt/kcgg/wlkc_ggb/student/beforeViewXs?wlkcid=B&amp;id=22">
+    <div class="card-main">
+      <h3 class="card-title">期末论文选题说明</h3>
+      <div class="card-meta">
+        <span class="tag-course">示例课程E</span>
+        <span class="tag-kind notice">公告</span>
+        
+        <span>2026-09-10</span>
+        <span>王五</span>
+        
+        
+      </div>
+      
+    </div>
+  </article></div></div><div class="section-block"><div class="section-heading">文件 · 3</div><div class="card-grid"><article class="card" data-url="https://learn.tsinghua.edu.cn/f/wlxt/kj/wlkc_kjxxb/student/beforePageList?wlkcid=A" title="https://learn.tsinghua.edu.cn/f/wlxt/kj/wlkc_kjxxb/student/beforePageList?wlkcid=A">
+    <div class="file-icon pdf">PDF</div>
+    <div class="card-main">
+      <h3 class="card-title">第3章_树与二叉树.pdf</h3>
+      <div class="card-meta">
+        <span class="tag-course">数据结构</span>
+        <span class="tag-kind file">文件</span>
+        <span>2026-09-17</span>
+        <span>2.3 MB</span>
+      </div>
+      <div class="card-actions"><button class="mini-btn" data-download="https://learn.tsinghua.edu.cn/b/wlxt/kj/wlkc_kjxxb/student/downloadFile?sfgk=0&amp;wjid=31">下载</button></div>
+    </div>
+  </article><article class="card" data-url="https://learn.tsinghua.edu.cn/f/wlxt/kj/wlkc_kjxxb/student/beforePageList?wlkcid=A" title="https://learn.tsinghua.edu.cn/f/wlxt/kj/wlkc_kjxxb/student/beforePageList?wlkcid=A">
+    <div class="file-icon zip">ZIP</div>
+    <div class="card-main">
+      <h3 class="card-title">实验二_源码框架.zip</h3>
+      <div class="card-meta">
+        <span class="tag-course">数据结构</span>
+        <span class="tag-kind file">文件</span>
+        <span>2026-09-14</span>
+        <span>800 KB</span>
+      </div>
+      <div class="card-actions"><button class="mini-btn" data-download="https://learn.tsinghua.edu.cn/b/wlxt/kj/wlkc_kjxxb/student/downloadFile?sfgk=0&amp;wjid=32">下载</button></div>
+    </div>
+  </article><article class="card" data-url="https://learn.tsinghua.edu.cn/f/wlxt/kj/wlkc_kjxxb/student/beforePageList?wlkcid=C" title="https://learn.tsinghua.edu.cn/f/wlxt/kj/wlkc_kjxxb/student/beforePageList?wlkcid=C">
+    <div class="file-icon ppt">PPTX</div>
+    <div class="card-main">
+      <h3 class="card-title">习题课讲义.pptx</h3>
+      <div class="card-meta">
+        <span class="tag-course">高等数学（3）</span>
+        <span class="tag-kind file">文件</span>
+        <span>2026-09-06</span>
+        <span>5.0 MB</span>
+      </div>
+      <div class="card-actions"><button class="mini-btn" data-download="https://learn.tsinghua.edu.cn/b/wlxt/kj/wlkc_kjxxb/student/downloadFile?sfgk=0&amp;wjid=33">下载</button></div>
+    </div>
+  </article></div></div></section>
+      </main>
+    </div>
+
+    <div id="drawer" class="drawer hidden">
+      <div class="drawer-mask" data-close="1"></div>
+      <div class="drawer-body">
+        <div class="drawer-head"><strong>设置</strong><button class="btn btn-icon" data-close="1">✕</button></div>
+        <div class="drawer-content">
+          <label class="field"><span>自动刷新间隔（分钟，0 关闭）</span><input id="set-autoRefresh" type="number"></label>
+          <label class="switch"><input id="set-showCompleted" type="checkbox"><span>显示已完成的作业</span></label>
+          <label class="switch"><input id="set-yuketangHomework" type="checkbox"><span>抓雨课堂作业</span></label>
+          <label class="switch"><input id="set-deepScan" type="checkbox"><span>深扫作业详情</span></label>
+          <label class="switch"><input id="set-hideEmpty" type="checkbox"><span>隐藏没有内容的课程</span></label>
+          <label class="switch"><input id="set-floating" type="checkbox"><span>悬浮入口</span></label>
+          <label class="switch"><input id="set-tabFallback" type="checkbox"><span>渲染兜底</span></label>
+          <label class="switch"><input id="set-autoLogin" type="checkbox"><span>自动填充</span></label>
+          <label class="field"><span>每门课最多条目</span><input id="set-maxItems" type="number"></label>
+          <label class="field"><span>并发数</span><input id="set-concurrency" type="number"></label>
+          <div class="drawer-note" id="settings-note"></div>
+          <div class="drawer-section"><button id="btn-forget" class="btn">清除凭据</button><button id="btn-open-learn" class="btn">打开网络学堂</button></div>
+          <!-- 调试入口：默认隐藏，由下面的开关控制（与真实面板同一套 .debug-only 机制） -->
+          <div class="debug-only" id="debug-panel">
+            <div class="drawer-section"><button id="btn-export2" class="btn">导出诊断</button></div>
+          </div>
+          <div class="drawer-section">
+            <label class="switch"><input id="set-debugMode" type="checkbox"><span>显示调试与取证功能</span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="login-modal" class="modal">
+      <div class="modal-mask"></div>
+      <div class="modal-body">
+        <h2>登录网络学堂</h2>
+        <p class="muted" id="login-hint">网络学堂现在走清华大学统一身份认证（带验证码），扩展无法代替你完成登录。填好账号密码后点下面的按钮，扩展会打开登录页并自动填充，你只需完成验证码/二次认证。</p>
+        <label class="field"><span>学号 / 账号</span><input id="login-user" type="text"></label>
+        <label class="field"><span>密码</span><input id="login-pass" type="password"></label>
+        <label class="switch"><input id="login-remember" type="checkbox"><span>记住密码</span></label>
+        <div id="login-error" class="login-error hidden"></div>
+        <div class="modal-actions"><button class="btn btn-primary">保存并打开登录页</button><button class="btn">我已在浏览器里登录</button><button class="btn btn-ghost">取消</button></div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast hidden">设置已保存</div>
+
+    <script type="module" src="../../src/dashboard/dashboard.js"></script>
+  
+
+<div class="desc-pop" style="visibility: visible; display: block; max-width: 426px; left: 50px; top: 828.031px;">示例作业说明：请从本窗口下载示例作业模板，并按要求完成以下任务。
+填写示例问卷；
+阅读一份示例材料并写出简要说明；
+就一个示例话题提出一个你想研究的具体问题。</div></body></html>
