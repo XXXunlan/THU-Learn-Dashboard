@@ -63,12 +63,25 @@ async function fromOpenTab() {
   return '';
 }
 
-/** 策略 2：直接扫页面 HTML（有些模板会把 token 渲染在页面里） */
+/**
+ * 策略 2：直接扫页面 HTML（有些模板会把 token 渲染在页面里）
+ *
+ * ⚠️ 这里必须带超时。它是整个抓取的**第一步**，而 `fetch` 天生没有超时 ——
+ * 网络一抖动它就会一直挂着，面板表现为永远停在「检查登录状态」。
+ * 实测踩过一次。取不到 token 本身是可接受的（会退化成不带 token 请求），
+ * 但绝不能因此把整个抓取卡死。
+ */
+const PAGE_HTML_TIMEOUT_MS = 12000;
+
 async function fromPageHtml() {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), PAGE_HTML_TIMEOUT_MS);
   try {
     const res = await fetch(`${ORIGIN}/f/wlxt/index/course/student/`, {
       credentials: 'include',
       redirect: 'follow',
+      cache: 'no-store',
+      signal: controller.signal,
     });
     const html = await res.text();
     const patterns = [
@@ -87,7 +100,12 @@ async function fromPageHtml() {
       return { token: u[0], source: 'page-html-uuid' };
     }
   } catch (err) {
-    log.debug('扫描页面 HTML 取 token 失败', err && err.message);
+    const aborted = err && (err.name === 'AbortError' || /abort/i.test(String(err.message || '')));
+    log.debug(aborted
+      ? `扫描页面 HTML 取 token 超时（${PAGE_HTML_TIMEOUT_MS}ms），按“没有 token”继续`
+      : '扫描页面 HTML 取 token 失败', err && err.message);
+  } finally {
+    clearTimeout(timer);
   }
   return '';
 }

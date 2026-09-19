@@ -34,7 +34,7 @@ import {
 import { PAGE, API, homeworkUrl, guessSemester, abs, ORIGIN, FILE_CATEGORY_COLUMNS, extractSemester, neighborSemesters } from '../src/api/endpoints.js';
 import { decideSession, classifyPageHtml } from '../src/background/auth.js';
 import { retargetRequest, retargetConditionJson, pickTemplates, retargetBody, columnsFromTemplate, rowsFromArrays } from '../src/api/learned.js';
-import { extractRowsDetailed } from '../src/api/client.js';
+import { extractRowsDetailed, apiJson, apiList, DEFAULT_TIMEOUT_MS } from '../src/api/client.js';
 import { slimHtml, outline, summarizeRequests } from '../src/background/probe.js';
 import { isSectionFailure } from '../src/background/crawler.js';
 import { parseHomeworkDetail, looksLikeContainer } from '../src/parsers/homework-detail.js';
@@ -67,6 +67,24 @@ function section(name, fn) {
     current.failed++;
     current.messages.push(`本组测试抛异常：${err && err.message ? err.message : String(err)}`);
   }
+}
+
+/**
+ * 异步小节。`section()` 是同步的，但有些行为**只能**异步验证 ——
+ * 比如「网络请求会不会超时」，必须真的挂一个永不返回的 fetch 才知道。
+ * 用法：`await asyncSection('名字', async () => { ... eq(...) ... })`
+ */
+async function asyncSection(name, fn) {
+  current = { name, passed: 0, failed: 0, messages: [] };
+  const sec = current;
+  sections.push(sec);
+  try {
+    await fn();
+  } catch (err) {
+    sec.failed++;
+    sec.messages.push(`本组测试抛异常：${err && err.message ? err.message : String(err)}`);
+  }
+  current = null;
 }
 
 function ok(cond, msg) {
@@ -2408,6 +2426,63 @@ section('雨课堂：HTTP 200 也可能是一次失败', () => {
   eq(apiError(null).length > 0, true, 'null 视为异常');
   // 章节树正常响应里没有 success 字段，不能被当成失败 —— 否则所有课都会被判定为出错
   eq(apiError({ data: { course_id: 1, course_chapter: [] }, success: true }), '', '真实章节树响应不误判');
+});
+
+/* ------------------------------------------- 27. 网络请求超时（异步） */
+
+/**
+ * 这一组必须异步：只有真的挂一个「服务器接了连接但永远不回」的 fetch，
+ * 才能验证请求会不会超时。
+ *
+ * 背景（真机上踩到的 bug）：`fetch` 天生没有超时，而抓取编排是一串 `await`。
+ * `_csrf` 取值那一步没有超时，网络一抖动就永远挂在 `await` 上 ——
+ * 面板表现为停在「检查登录状态」不动；更糟的是 runCrawl 会复用进行中的任务，
+ * 于是之后每次点「刷新」拿到的还是同一个卡住的任务。
+ */
+await asyncSection('网络请求超时（曾卡死在「检查登录状态」）', async () => {
+  eq(typeof DEFAULT_TIMEOUT_MS, 'number', '导出了默认超时值');
+  ok(DEFAULT_TIMEOUT_MS > 0 && DEFAULT_TIMEOUT_MS <= 60000,
+    `默认超时是合理值（实际 ${DEFAULT_TIMEOUT_MS}ms）`);
+
+  const realFetch = globalThis.fetch;
+  let sawSignal = false;
+  let calls = 0;
+  globalThis.fetch = (url, opts) => {
+    calls++;
+    if (opts && opts.signal) {
+      sawSignal = true;
+      // 忠实模拟 AbortController：signal 一 abort 就抛 AbortError
+      return new Promise((_, reject) => {
+        opts.signal.addEventListener('abort', () => {
+          const e = new Error('The operation was aborted.');
+          e.name = 'AbortError';
+          reject(e);
+        });
+      });
+    }
+    return new Promise(() => {});   // 没带 signal 就永远挂着 —— 正是修复前的行为
+  };
+
+  try {
+    const t0 = Date.now();
+    const res = await apiJson('/b/kc/zhjw_v_code_xnxq/getCurrentAndNextSemester', { timeoutMs: 80 });
+    const dt = Date.now() - t0;
+
+    eq(sawSignal, true, '请求确实带上了 AbortSignal —— 这是超时能生效的前提');
+    eq(res.ok, false, '超时后返回失败，而不是永远挂着');
+    eq(/没有响应/.test(String(res.reason || '')), true,
+      `失败原因说清了是超时，而不是一句 "The operation was aborted"（实际：${res.reason}）`);
+    ok(dt < 5000, `在超时时间附近就返回了，没有无限等待（实际 ${dt}ms）`);
+    ok(calls >= 1, '确实发出过请求');
+
+    // 列表接口走的是同一条 rawFetch，也必须不会挂死
+    const listRes = await apiList('/b/wlxt/kcgg/wlkc_ggb/student/kcggListXs', { timeoutMs: 80 });
+    eq(listRes.ok, false, '列表接口同样不会挂死');
+    eq(/没有响应|HTML|JSON/.test(String(listRes.reason || '')), true,
+      `列表接口也给出了可读的失败原因（实际：${listRes.reason}）`);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 });
 
 for (const s of sections) {

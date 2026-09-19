@@ -121,32 +121,58 @@ export function extractTotal(json) {
   return 0;
 }
 
-async function rawFetch(url, { method = 'GET', body, csrf }) {
+/**
+ * 单次请求的默认超时。
+ *
+ * 为什么要它：`fetch` 本身**没有超时**。网络一抖动（服务器接了连接却不回、或者
+ * 中间链路断了），这个 Promise 就会一直挂着，而抓取编排正 `await` 着它 ——
+ * 表现就是面板永远停在某一句进度上。实测踩过一次：卡在「检查登录状态」不动，
+ * 而且因为 runCrawl 会复用进行中的任务，之后每次点刷新拿到的还是同一个卡住的任务。
+ *
+ * 15 秒是权衡：正常接口都在 1 秒内返回；真慢到这个程度说明这条路已经不通了，
+ * 早点放弃、去走兜底路径反而更快。
+ */
+export const DEFAULT_TIMEOUT_MS = 15000;
+
+async function rawFetch(url, { method = 'GET', body, csrf, timeoutMs = DEFAULT_TIMEOUT_MS }) {
   const finalUrl = csrf
     ? `${url}${url.includes('?') ? '&' : '?'}_csrf=${encodeURIComponent(csrf)}`
     : url;
-  const res = await fetch(finalUrl, {
-    method,
-    body,
-    credentials: 'include',
-    redirect: 'follow',
-    cache: 'no-store',
-    headers: {
-      Accept: 'application/json, text/javascript, */*; q=0.01',
-      'X-Requested-With': 'XMLHttpRequest',
-      'Accept-Language': 'zh-CN,zh;q=0.9',
-      ...(body ? { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' } : {}),
-    },
-  });
-  const text = await res.text();
-  return { status: res.status, ok: res.ok, url: res.url || finalUrl, text, finalUrl };
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(finalUrl, {
+      method,
+      body,
+      credentials: 'include',
+      redirect: 'follow',
+      cache: 'no-store',
+      signal: controller.signal,
+      headers: {
+        Accept: 'application/json, text/javascript, */*; q=0.01',
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept-Language': 'zh-CN,zh;q=0.9',
+        ...(body ? { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' } : {}),
+      },
+    });
+    const text = await res.text();
+    return { status: res.status, ok: res.ok, url: res.url || finalUrl, text, finalUrl };
+  } catch (err) {
+    // 把 abort 翻译成人能看懂的话 —— 否则上层只会显示 "The operation was aborted"
+    if (err && (err.name === 'AbortError' || /abort/i.test(String(err.message || '')))) {
+      throw new Error(`请求超过 ${timeoutMs}ms 没有响应，已放弃（${finalUrl.slice(0, 120)}）`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /**
  * 请求一个列表接口。
  * @returns {Promise<{ok:boolean, rows:Array, total:number, status:number, url:string, reason:string}>}
  */
-export async function apiList(path, { wlkcid = '', start = 0, length = 200, csrf = '', extra = {} } = {}) {
+export async function apiList(path, { wlkcid = '', start = 0, length = 200, csrf = '', extra = {}, timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
   const params = { ...dtParams({ start, length, wlkcid }), ...extra };
   const url = buildUrl(path, params);
   const attempts = [
@@ -159,7 +185,7 @@ export async function apiList(path, { wlkcid = '', start = 0, length = 200, csrf
   let lastReason = '未尝试';
   for (const a of attempts) {
     try {
-      const res = await rawFetch(url, a);
+      const res = await rawFetch(url, { ...a, timeoutMs });
       const text = res.text || '';
       const looksHtml = /^\s*<(!doctype|html)/i.test(text);
       if (looksHtml) {
@@ -202,7 +228,7 @@ export async function apiList(path, { wlkcid = '', start = 0, length = 200, csrf
  * 注意响应可能是 DataTables 1.9 的 `aaData` **二维数组**（行是数组不是对象），
  * 这时用模板里学到的列定义把它转成对象行 —— 列定义同样来自站点自己的请求。
  */
-export async function apiListViaTemplate(template, { wlkcid = '', csrf = '' } = {}) {
+export async function apiListViaTemplate(template, { wlkcid = '', csrf = '', timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
   const retargeted = retargetRequest(template, wlkcid, csrf);
   if (!retargeted) return { ok: false, rows: [], trusted: false, via: 'template', reason: '模板无法改造' };
   const columns = template.columns && template.columns.length ? template.columns : columnsFromTemplate(template);
@@ -214,7 +240,7 @@ export async function apiListViaTemplate(template, { wlkcid = '', csrf = '' } = 
   for (const a of attempts) {
     try {
       // 模板 URL 里已经带好了 _csrf，这里不要再追加一次
-      const res = await rawFetch(retargeted.url, { ...a, csrf: '' });
+      const res = await rawFetch(retargeted.url, { ...a, csrf: '', timeoutMs });
       const text = res.text || '';
       if (/^\s*</.test(text)) { lastReason = '模板重放返回 HTML'; continue; }
       let json = null;
@@ -244,11 +270,11 @@ export async function apiListViaTemplate(template, { wlkcid = '', csrf = '' } = 
 }
 
 /** 请求一个返回 JSON 的普通接口 */
-export async function apiJson(path, { csrf = '', params = {} } = {}) {
+export async function apiJson(path, { csrf = '', params = {}, timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
   const url = buildUrl(path, params);
   for (const token of [csrf, '']) {
     try {
-      const res = await rawFetch(url, { method: 'GET', csrf: token });
+      const res = await rawFetch(url, { method: 'GET', csrf: token, timeoutMs });
       if (/^\s*</.test(res.text || '')) continue;
       return { ok: true, json: JSON.parse(res.text), url: res.finalUrl, status: res.status };
     } catch (err) {

@@ -56,6 +56,26 @@ async function refreshBadge(cache) {
 
 let crawling = null;
 
+/**
+ * 允许多久没有进展就判定为「卡住」。
+ *
+ * 为什么需要这道保险：抓取编排是一串 `await`，只要中间有任何一处调用没有超时
+ * （历史教训：`fetch` 天生没有超时，`_csrf` 那一步就卡死过），整个任务就会永远停在
+ * 某一句进度上。更糟的是 `runCrawl` 会**复用进行中的任务**，于是之后每次点「刷新」
+ * 拿到的还是同一个卡住的任务，界面上看起来就是彻底死了。
+ *
+ * 正常抓取几乎每一两秒都会推一次进度（含"雨课堂 x/y"这类），所以 90 秒无变化
+ * 足以判定异常；真要是被误判，也只会报一次错，重新点刷新即可。
+ */
+const STALL_LIMIT_MS = 90 * 1000;
+const STALL_CHECK_MS = 5 * 1000;
+
+/** 进度的「内容指纹」——任一字段变了就算有进展 */
+function progressKey(p) {
+  if (!p) return '';
+  return `${p.phase || ''}|${p.message || ''}|${p.done || 0}|${p.total || 0}|${p.current || ''}`;
+}
+
 async function runCrawl({ force = false, courseIds = null, reason = 'manual' } = {}) {
   if (crawling) {
     log.info('已有抓取在进行，复用该次任务');
@@ -63,8 +83,32 @@ async function runCrawl({ force = false, courseIds = null, reason = 'manual' } =
   }
   log.info('开始抓取', { reason, force });
   crawling = (async () => {
+    // 看门狗：独立盯住进度，长时间没变化就主动收场（见上面 STALL_LIMIT_MS 的说明）
+    let stallReject = null;
+    const stallPromise = new Promise((_, reject) => { stallReject = reject; });
+    let lastKey = progressKey(memory.progress);
+    let lastChangeAt = Date.now();
+    const watchdog = setInterval(() => {
+      const key = progressKey(memory.progress);
+      if (key !== lastKey) {
+        lastKey = key;
+        lastChangeAt = Date.now();
+        return;
+      }
+      if (Date.now() - lastChangeAt < STALL_LIMIT_MS) return;
+      log.warn(`抓取已 ${Math.round(STALL_LIMIT_MS / 1000)}s 没有进展，判定为卡住，放弃本次`);
+      // 两件事都做：让仍在跑的抓取在下一个检查点自己退出，
+      // 并且直接把外层任务结束掉 —— 否则 crawling 会一直挂着，刷新也跟着失效。
+      memory.abort = true;
+      stallReject(new Error(`抓取卡住了：超过 ${Math.round(STALL_LIMIT_MS / 1000)} 秒没有任何进展，已放弃本次。请重新点「刷新」。`));
+    }, STALL_CHECK_MS);
+
+    const job = crawlAll({ force, onlyCourseIds: courseIds, onProgress: pushProgress });
+    // 被看门狗抢先后，job 仍可能在后台跑到下一个检查点才停；别让它变成未处理的 rejection
+    job.catch(() => {});
+
     try {
-      const cache = await crawlAll({ force, onlyCourseIds: courseIds, onProgress: pushProgress });
+      const cache = await Promise.race([job, stallPromise]);
       await refreshBadge(cache);
       broadcast(EVENT.STATE_CHANGED, await buildState());
       return { ok: true, cache };
@@ -85,8 +129,11 @@ async function runCrawl({ force = false, courseIds = null, reason = 'manual' } =
       broadcast(EVENT.STATE_CHANGED, await buildState());
       return { ok: false, cancelled: isCancel, authRequired: isAuth, error: err.message, info: err.info || null };
     } finally {
+      clearInterval(watchdog);
       crawling = null;
-      memory.progress = memory.progress && memory.progress.running ? { ...memory.progress, running: false } : memory.progress;
+      memory.progress = memory.progress && memory.progress.running
+        ? { ...memory.progress, running: false, message: memory.progress.message || '已结束' }
+        : memory.progress;
     }
   })();
   return crawling;

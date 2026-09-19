@@ -34,14 +34,29 @@ import { getSettings, memory, setCache, appendDiagnostic } from './store.js';
 const log = createLogger('crawler');
 
 export class CancelledError extends Error {
-  constructor() {
-    super('抓取已取消');
+  constructor(reason = '抓取已取消') {
+    super(reason);
     this.name = 'CancelledError';
   }
 }
 
-function assertNotCancelled() {
+/**
+ * 抓取代次。每开始一次 crawlAll 就 +1。
+ *
+ * 为什么需要它：卡住的抓取不会凭空消失 —— 看门狗把它「放弃」之后，它其实还挂在
+ * 某个 `await` 上；等它醒过来会继续往下跑。有了代次，它就能在下一个检查点认出
+ * 自己已经被新的一次抓取取代，然后停下来 —— 否则两次抓取会同时往缓存里写。
+ */
+let runToken = 0;
+
+export function currentRunToken() { return runToken; }
+
+function assertNotCancelled(ctx) {
   if (memory.abort) throw new CancelledError();
+  // ctx 里是这次抓取启动时领到的代次；不等于当前值说明已被后来的抓取取代
+  if (ctx && ctx.token !== undefined && ctx.token !== runToken) {
+    throw new CancelledError('这次抓取已被新的抓取取代');
+  }
 }
 
 /** 截止紧急度，供 UI 上色 */
@@ -344,7 +359,7 @@ async function crawlCourse(course, ctx) {
   const out = { ...course, announcements: [], files: [], homework: [], errors: [], fetchedAt: 0, stats: {} };
 
   for (const kind of ['homework', 'notice', 'file']) {
-    assertNotCancelled();
+    assertNotCancelled(ctx);
     try {
       const sec = await fetchSection(course, kind, ctx);
       out.stats[kind] = `${sec.items.length} 条 · ${sec.method}`;
@@ -528,6 +543,7 @@ async function loadCourses(csrf, settings, { onProgress }) {
  */
 export async function crawlAll({ onProgress = () => {}, force = false, onlyCourseIds = null } = {}) {
   const started = Date.now();
+  const myToken = ++runToken;
   memory.abort = false;
   const settings = await getSettings();
   const now = Date.now();
@@ -584,7 +600,7 @@ export async function crawlAll({ onProgress = () => {}, force = false, onlyCours
     }
   }
 
-  assertNotCancelled();
+  assertNotCancelled({ token: myToken });
 
   report({ phase: 'courses', message: '获取课程清单…' });
   const courseInfo = await loadCourses(csrf, settings, { onProgress: report });
@@ -606,6 +622,7 @@ export async function crawlAll({ onProgress = () => {}, force = false, onlyCours
   const failures = [];
   const ctx = {
     csrf, settings, now, samples, templates,
+    token: myToken,
     homeCache: new Map(),
     step: (courseName, kind) => {
       stepDone++;
@@ -631,7 +648,7 @@ export async function crawlAll({ onProgress = () => {}, force = false, onlyCours
 
   const results = [];
   const wrap = (course) => async () => {
-    assertNotCancelled();
+    assertNotCancelled(ctx);
     try {
       return await crawlCourse(course, ctx);
     } catch (err) {
@@ -658,7 +675,7 @@ export async function crawlAll({ onProgress = () => {}, force = false, onlyCours
       const batch = await mapLimit(rest, Math.max(1, Math.min(settings.concurrency || 4, 8)), (c) => wrap(c)());
       results.push(...batch);
     }
-    assertNotCancelled();
+    assertNotCancelled({ token: myToken });
   } finally {
     // 无论成功、失败还是被取消，兜底用的辅助窗口都要收掉
     await closeHelperTab();
