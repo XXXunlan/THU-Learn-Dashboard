@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "THU Learn Dashboard · 网络学堂 × 雨课堂",
   "short_name": "网络学堂×雨课堂",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "把清华大学网络学堂与雨课堂的作业合并到一块面板：公告、文件、作业（含截止倒计时）按课程汇总，雨课堂作业自动归入同名课程，一键跳转到对应页面。",
   "minimum_chrome_version": "111",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoNYEaQMEftp9loU1eOYgLvGMczeosg77z8gaGpE4ufb9s+6FRc9Z44VX6v8VBd/p83HFotIiq5ieYBWqWi3PpdRoxBtCDlQA3zgTBhXFOzPKhQ5L4Z8t7pPJWYhxoJ6aCkY9D9/Y5m0tZ53aVU7rwSTgxqM0L3A9zaSnhY3ERIEqJiaU5s+FzlUOgKiBPb4wFClK6EDp25Lt6mM52L6rZsl1gYbY55f/VyHlJDjC4C/E2VGoKYk/MyJBFA7N5nrcAyP6c5/GfZoWOh5al6H7k5BBf+RSVt08MDvY+ihxdkiBZX5IBGlmDJk7L+MPoEDYdeeD55vj44zh6zffUV1xTQIDAQAB",
